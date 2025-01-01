@@ -4,7 +4,7 @@ import openai
 from elasticsearch import Elasticsearch
 
 # This code is part of an Elastic Blog showing how to combine
-# Elasticsearch's search relevancy power with 
+# Elasticsearch's search relevancy power with
 # OpenAI's GPT's Question Answering power
 # https://www.elastic.co/blog/chatgpt-elasticsearch-openai-meets-private-data
 
@@ -18,7 +18,7 @@ from elasticsearch import Elasticsearch
 # cloud_user - Elasticsearch Cluster User
 # cloud_pass - Elasticsearch User Password
 
-openai.api_key = os.environ['openai_api']
+openai.api_key = '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'
 model = "gpt-3.5-turbo-0301"
 
 # Connect to Elastic Cloud cluster
@@ -28,56 +28,40 @@ def es_connect(cid, user, passwd):
 
 # Search ElasticSearch index and return body and URL of the result
 def search(query_text):
-    cid = os.environ['cloud_id']
-    cp = os.environ['cloud_pass']
-    cu = os.environ['cloud_user']
+    cid = '9e66664f7f9f483bb0fb06bfd955aeea:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyRlOGQyOTQ2YjdlYWY0MDYxYTNlMDZkYjllNjY3ZDgzOSRjZGFmODQ1MTQwNzY0Yzg4ODY1NThhODU0ODE4ZmM1Ng=='
+    cp = 'FDbEf5MFsfsJGfz32ddZWExY'
+    cu = 'elastic'
     es = es_connect(cid, cu, cp)
 
     # Elasticsearch query (BM25) and kNN configuration for hybrid search
     query = {
-        "bool": {
-            "must": [{
-                "match": {
-                    "title": {
-                        "query": query_text,
-                        "boost": 1
-                    }
-                }
-            }],
-            "filter": [{
-                "exists": {
-                    "field": "title-vector"
-                }
-            }]
-        }
-    }
+        "query": {
+          "multi_match": {
+              "query": query_text,
+              "fields": ["*"],
+              "operator": "or"
+          }
+      }
+}
 
-    knn = {
-        "field": "title-vector",
-        "k": 1,
-        "num_candidates": 20,
-        "query_vector_builder": {
-            "text_embedding": {
-                "model_id": "sentence-transformers__all-distilroberta-v1",
-                "model_text": query_text
-            }
-        },
-        "boost": 24
-    }
-
-    fields = ["title", "body_content", "url"]
-    index = 'search-elastic-docs'
+    #fields = ["text_embedding.predicted_value"]
+    index = 'naver_webtoon_all'
     resp = es.search(index=index,
-                     query=query,
-                     knn=knn,
-                     fields=fields,
+                     body=query,
+                     #knn=knn,
+                     #fields=fields,
                      size=1,
-                     source=False)
+                     #source=False
+                     )
 
-    body = resp['hits']['hits'][0]['fields']['body_content'][0]
-    url = resp['hits']['hits'][0]['fields']['url'][0]
+    if resp['hits']['hits']:
+        if len(resp['hits']['hits']) > 0:
+            body = resp['hits']['hits'][0]['_source']
+        else:
+            body = "No documents found in the hits."
+    else: body = "No results found."
 
-    return body, url
+    return body
 
 def truncate_text(text, max_tokens):
     tokens = text.split()
@@ -87,7 +71,7 @@ def truncate_text(text, max_tokens):
     return ' '.join(tokens[:max_tokens])
 
 # Generate a response from ChatGPT based on the given prompt
-def chat_gpt(prompt, model="gpt-3.5-turbo", max_tokens=1024, max_context_tokens=4000, safety_margin=5):
+def chat_gpt(prompt, model="gpt-3.5-turbo", max_tokens=4096, max_context_tokens=4096, safety_margin=5):
     # Truncate the prompt content to fit within the model's context length
     truncated_prompt = truncate_text(prompt, max_context_tokens - max_tokens - safety_margin)
 
@@ -97,7 +81,7 @@ def chat_gpt(prompt, model="gpt-3.5-turbo", max_tokens=1024, max_context_tokens=
     return response["choices"][0]["message"]["content"]
 
 
-st.title("ElasticDocs GPT")
+st.title("네이버 웹툰 검색\nBy 박희망(DiLab)")
 
 # Main chat form
 with st.form("chat_form"):
@@ -107,11 +91,11 @@ with st.form("chat_form"):
 # Generate and display response on form submission
 negResponse = "I'm unable to answer the question based on the information I have from Elastic Docs."
 if submit_button:
-    resp, url = search(query)
-    prompt = f"Answer this question: {query}\nUsing only the information from this Elastic Doc: {resp}\nIf the answer is not contained in the supplied doc reply '{negResponse}' and nothing else"
+    resp = search(query)
+    prompt = f"Answer this question in Korean: {query}\nUsing only the information from this Elastic Doc: {resp}\nIf the answer is not contained in the supplied doc reply '{negResponse}' and nothing else"
     answer = chat_gpt(prompt)
     
     if negResponse in answer:
         st.write(f"ChatGPT: {answer.strip()}")
     else:
-        st.write(f"ChatGPT: {answer.strip()}\n\nDocs: {url}")
+        st.write(f"ChatGPT: {answer.strip()}\n")

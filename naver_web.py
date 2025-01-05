@@ -18,7 +18,7 @@ from elasticsearch import Elasticsearch
 # cloud_user - Elasticsearch Cluster User
 # cloud_pass - Elasticsearch User Password
 
-openai.api_key = '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'
+openai.api_key = 
 model = "gpt-3.5-turbo-0301"
 
 # Connect to Elastic Cloud cluster

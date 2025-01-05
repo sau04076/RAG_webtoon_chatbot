@@ -12,7 +12,7 @@ import torch
 
 ELASTIC_USERNAME = 'elastic'
 ELASTIC_PASSWORD = 'corgPVVsNOI7hB15H0di'
-OPENAI_API_KEY = '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'
+OPENAI_API_KEY = 
 
 es = Elasticsearch("http://localhost:9200")
 client = OpenAI(api_key=OPENAI_API_KEY)

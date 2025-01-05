@@ -8,8 +8,8 @@ import requests
 from io import BytesIO
 import matplotlib.pyplot as plt
 
-ELASTIC_USERNAME = 'elastic'
-ELASTIC_PASSWORD = 'corgPVVsNOI7hB15H0di'
+ELASTIC_USERNAME = 
+ELASTIC_PASSWORD = 
 OPENAI_API_KEY = 
 
 es = Elasticsearch("http://localhost:9200")

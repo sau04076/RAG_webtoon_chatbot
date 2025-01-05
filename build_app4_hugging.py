@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from transformers import pipeline
 import torch
 
-ELASTIC_USERNAME = 'elastic'
-ELASTIC_PASSWORD = 'corgPVVsNOI7hB15H0di'
+ELASTIC_USERNAME = 
+ELASTIC_PASSWORD = 
 OPENAI_API_KEY = 
 
 es = Elasticsearch("http://localhost:9200")
